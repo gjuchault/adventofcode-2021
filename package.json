@@ -1,0 +1,21 @@
+{
+  "name": "adventofcode-2021",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/gjuchault/adventofcode-2021.git",
+  "author": "Gabriel JUCHAULT <gabriel.juchault@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "day": "node scripts/day"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^9.0.13",
+    "@types/node": "^16.11.11",
+    "esbuild": "^0.14.1",
+    "prettier": "^2.5.0",
+    "typescript": "^4.5.2"
+  },
+  "dependencies": {
+    "fs-extra": "^10.0.0"
+  }
+}
