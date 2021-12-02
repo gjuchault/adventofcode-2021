@@ -31,7 +31,33 @@ async function part1() {
   return horizontalPosition * depth;
 }
 
-async function part2() {}
+async function part2() {
+  const input = rawInput.split("\n").map(parseCommand);
+
+  let horizontalPosition = 0;
+  let depth = 0;
+  let aim = 0;
+
+  for (const command of input) {
+    switch (command.kind) {
+      case "forward": {
+        horizontalPosition += command.value;
+        depth += aim * command.value;
+        break;
+      }
+      case "down": {
+        aim += command.value;
+        break;
+      }
+      case "up": {
+        aim -= command.value;
+        break;
+      }
+    }
+  }
+
+  return horizontalPosition * depth;
+}
 
 function parseCommand(line: string): Command {
   const [kind, rawValue] = line.split(" ");
