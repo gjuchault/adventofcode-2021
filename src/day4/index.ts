@@ -35,7 +35,34 @@ async function part1() {
   return sumOfAllUnmarkedNumbers * bingo.numbersSet[bestBoardScore];
 }
 
-async function part2() {}
+async function part2() {
+  const bingo = parseInput(rawInput);
+
+  let bestBoard: Board | undefined;
+  let bestBoardScore = -1;
+
+  for (const board of bingo.boards) {
+    const score = solveBingoBoard(board, bingo.numbersSet);
+
+    if (score >= bestBoardScore) {
+      bestBoard = board;
+      bestBoardScore = score;
+    }
+  }
+
+  if (!bestBoard) {
+    throw new Error("failed");
+  }
+
+  const winningSequence = bingo.numbersSet.slice(0, bestBoardScore + 1);
+
+  const sumOfAllUnmarkedNumbers = bestBoard.columns
+    .flat()
+    .filter((n) => !winningSequence.includes(n))
+    .reduce((a, b) => a + b, 0);
+
+  return sumOfAllUnmarkedNumbers * bingo.numbersSet[bestBoardScore];
+}
 
 function solveBingoBoard(board: Board, numbersSet: number[]): number {
   let score = Infinity;
