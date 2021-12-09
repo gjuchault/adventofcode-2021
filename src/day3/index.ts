@@ -54,7 +54,7 @@ function filterDiagnostic(
     const row = transposedDiagnostic[column];
     const takeBit = createTakeBit(row);
 
-    let indexesToRemove = [];
+    let indexesToRemove: number[] = [];
 
     for (let i = 0; i < row.length; i++) {
       if (!takeBit(row[i])) {
