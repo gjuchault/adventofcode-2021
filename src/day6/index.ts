@@ -3,6 +3,16 @@ import { input as rawInput } from "./input";
 async function part1() {
   const fishes = rawInput.split(",").map(Number);
 
+  return calculateFishes(fishes, 80);
+}
+
+async function part2() {
+  const fishes = rawInput.split(",").map(Number);
+
+  return calculateFishes(fishes, 256);
+}
+
+function calculateFishes(initialFishes: number[], days: number) {
   let fishByReset = new Map([
     [0, 0],
     [1, 0],
@@ -15,11 +25,11 @@ async function part1() {
     [8, 0],
   ]);
 
-  for (const fish of fishes) {
+  for (const fish of initialFishes) {
     fishByReset.set(fish, (fishByReset.get(fish) ?? 0) + 1);
   }
 
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < days; i++) {
     fishByReset = new Map([
       [0, fishByReset.get(1) ?? 0],
       [1, fishByReset.get(2) ?? 0],
@@ -34,12 +44,6 @@ async function part1() {
   }
 
   return Array.from(fishByReset.values()).reduce((a, b) => a + b, 0);
-}
-
-async function part2() {
-  const input = rawInput.split(",").map(Number);
-
-  return input.length;
 }
 
 async function main() {
