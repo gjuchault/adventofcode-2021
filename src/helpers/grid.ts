@@ -1,3 +1,5 @@
+import { filterOutUndefined } from "./array";
+
 export function createGrid<TValue>() {
   let grid: TValue[][] = [];
 
@@ -8,6 +10,10 @@ export function createGrid<TValue>() {
     },
 
     at(x: number, y: number): TValue | undefined {
+      if (x < 0 || y < 0) {
+        return undefined;
+      }
+
       return grid.at(y)?.at(x);
     },
 
@@ -21,6 +27,23 @@ export function createGrid<TValue>() {
 
     toArray() {
       return [...grid.map((row) => [...row])];
+    },
+
+    adjacents(x: number, y: number) {
+      return [
+        this.at(x - 1, y),
+        this.at(x + 1, y),
+        this.at(x, y - 1),
+        this.at(x, y + 1),
+      ].filter(filterOutUndefined);
+    },
+
+    fromArray(input: TValue[][]) {
+      for (let y = 0; y < input.length; y++) {
+        for (let x = 0; x < input[y].length; x++) {
+          this.set(x, y, input[y][x]);
+        }
+      }
     },
 
     display(defaultValue: string = ".") {

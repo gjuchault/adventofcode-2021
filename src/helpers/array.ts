@@ -5,3 +5,7 @@ export function transpose<T>(input: T[][]): T[][] {
 export function intersection<T>(left: T[], right: T[]): T[] {
   return left.filter((item) => right.includes(item));
 }
+
+export function filterOutUndefined<T>(item: T | undefined): item is T {
+  return item !== undefined;
+}
