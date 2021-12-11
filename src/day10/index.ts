@@ -1,47 +1,11 @@
+import {
+  actionMap,
+  characterMap,
+  closeCharacter,
+  getInitialDepthManager,
+  openCharacter,
+} from "./depthMap";
 import { input as rawInput } from "./input";
-
-type ProgramCharacter = "parenthesis" | "bracket" | "curly" | "lessThan";
-
-type DepthManager = {
-  map: {
-    parenthesis: number;
-    bracket: number;
-    curly: number;
-    lessThan: number;
-  };
-  closeTail: ProgramCharacter[];
-  result: "complete" | "incomplete" | "invalid";
-  score: number;
-};
-
-const characterMap: Record<string, ProgramCharacter> = {
-  "(": "parenthesis",
-  ")": "parenthesis",
-  "[": "bracket",
-  "]": "bracket",
-  "{": "curly",
-  "}": "curly",
-  "<": "lessThan",
-  ">": "lessThan",
-};
-
-const actionMap: Record<string, "open" | "close"> = {
-  "(": "open",
-  ")": "close",
-  "[": "open",
-  "]": "close",
-  "{": "open",
-  "}": "close",
-  "<": "open",
-  ">": "close",
-};
-
-const scoreMap: Record<ProgramCharacter, number> = {
-  parenthesis: 3,
-  bracket: 57,
-  curly: 1197,
-  lessThan: 25137,
-};
 
 async function part1() {
   const input = rawInput.split("\n");
@@ -49,26 +13,17 @@ async function part1() {
   let part1 = 0;
 
   for (const line of input) {
-    let depthManager: DepthManager = {
-      map: {
-        parenthesis: 0,
-        bracket: 0,
-        curly: 0,
-        lessThan: 0,
-      },
-      closeTail: [],
-      result: "complete",
-      score: 0,
-    };
+    let depthManager = getInitialDepthManager();
 
-    for (const character of line) {
+    for (const [i, character] of line.split("").entries()) {
+      const isLast = i === line.length - 1;
       const characterType = characterMap[character];
       const action = actionMap[character];
 
       if (action === "open") {
-        depthManager = openCharacter(depthManager, characterType);
+        depthManager = openCharacter(depthManager, characterType, isLast);
       } else if (action === "close") {
-        depthManager = closeCharacter(depthManager, characterType);
+        depthManager = closeCharacter(depthManager, characterType, isLast);
       }
 
       if (depthManager.result === "incomplete") {
@@ -76,7 +31,7 @@ async function part1() {
       }
 
       if (depthManager.result === "invalid") {
-        part1 += scoreMap[characterType];
+        part1 += depthManager.score;
         break;
       }
     }
@@ -85,49 +40,37 @@ async function part1() {
   return part1;
 }
 
-function openCharacter(
-  depthManager: DepthManager,
-  character: ProgramCharacter
-): DepthManager {
-  return {
-    map: {
-      ...depthManager.map,
-      [character]: depthManager.map[character] + 1,
-    },
-    closeTail: [...depthManager.closeTail, character],
-    result: depthManager.result,
-    score: depthManager.score,
-  };
-}
+async function part2() {
+  const input = rawInput.split("\n");
 
-function closeCharacter(
-  depthManager: DepthManager,
-  character: ProgramCharacter
-): DepthManager {
-  if (depthManager.closeTail.at(-1) !== character) {
-    return {
-      map: depthManager.map,
-      closeTail: depthManager.closeTail,
-      result: "invalid",
-      score: scoreMap[character],
-    };
+  const scores: number[] = [];
+
+  for (const line of input) {
+    let depthManager = getInitialDepthManager();
+
+    for (const [i, character] of line.split("").entries()) {
+      const isLast = i === line.length - 1;
+      const characterType = characterMap[character];
+      const action = actionMap[character];
+
+      if (action === "open") {
+        depthManager = openCharacter(depthManager, characterType, isLast);
+      } else if (action === "close") {
+        depthManager = closeCharacter(depthManager, characterType, isLast);
+      }
+
+      if (depthManager.result === "incomplete") {
+        scores.push(depthManager.score);
+        break;
+      }
+
+      if (depthManager.result === "invalid") {
+        break;
+      }
+    }
   }
 
-  return {
-    map: {
-      ...depthManager.map,
-      [character]: depthManager.map[character] - 1,
-    },
-    closeTail: depthManager.closeTail.slice(0, -1),
-    result: depthManager.result,
-    score: depthManager.score,
-  };
-}
-
-async function part2() {
-  const input = rawInput.split("\n").map(Number);
-
-  return input.length;
+  return scores.sort((a, b) => a - b).at(Math.floor(scores.length / 2));
 }
 
 async function main() {
