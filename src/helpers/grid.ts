@@ -1,6 +1,17 @@
-import { filterOutUndefined } from "./array";
+export type Point<TValue> = { x: number; y: number; value: TValue };
 
-export function createGrid<TValue>() {
+export type Grid<TValue> = {
+  set(x: number, y: number, value: TValue): void;
+  at(x: number, y: number): TValue | undefined;
+  width(): number;
+  height(): number;
+  toArray(): TValue[][];
+  adjacents(x: number, y: number): Point<TValue>[];
+  fromArray(input: TValue[][]): void;
+  display(defaultValue?: string): string;
+};
+
+export function createGrid<TValue>(): Grid<TValue> {
   let grid: TValue[][] = [];
 
   return {
@@ -31,11 +42,13 @@ export function createGrid<TValue>() {
 
     adjacents(x: number, y: number) {
       return [
-        this.at(x - 1, y),
-        this.at(x + 1, y),
-        this.at(x, y - 1),
-        this.at(x, y + 1),
-      ].filter(filterOutUndefined);
+        { x: x - 1, y: y, value: this.at(x - 1, y) },
+        { x: x + 1, y: y, value: this.at(x + 1, y) },
+        { x: x, y: y - 1, value: this.at(x, y - 1) },
+        { x: x, y: y + 1, value: this.at(x, y + 1) },
+      ].filter((adjacent): adjacent is Point<TValue> => {
+        return adjacent.value !== undefined;
+      });
     },
 
     fromArray(input: TValue[][]) {
@@ -60,4 +73,8 @@ export function createGrid<TValue>() {
       return rows.join("\n");
     },
   };
+}
+
+export function isSamePoint<TValue>(left: Point<TValue>, right: Point<TValue>) {
+  return left.x === right.x && left.y === right.y;
 }
