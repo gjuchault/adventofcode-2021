@@ -25,9 +25,31 @@ async function part1() {
 }
 
 async function part2() {
-  const input = rawInput.split("\n").map(Number);
+  const crabs = rawInput.split(",").map(Number);
 
-  return input.length;
+  let bestPosition = 0;
+  let fuelNecessary = Infinity;
+
+  for (
+    let targetPosition = 0;
+    targetPosition < Math.max(...crabs);
+    targetPosition++
+  ) {
+    const totalFuel = crabs
+      .map((crab) => {
+        const distance = Math.abs(crab - targetPosition);
+
+        return (distance * (distance + 1)) / 2;
+      })
+      .reduce((a, b) => a + b, 0);
+
+    if (totalFuel < fuelNecessary) {
+      bestPosition = targetPosition;
+      fuelNecessary = totalFuel;
+    }
+  }
+
+  return fuelNecessary;
 }
 
 async function main() {
