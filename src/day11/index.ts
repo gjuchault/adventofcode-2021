@@ -70,7 +70,70 @@ async function part1() {
 async function part2() {
   const input = rawInput.split("\n").map((line) => line.split("").map(Number));
 
-  return input.length;
+  const grid = createGrid<number>();
+  grid.fromArray(input);
+
+  let stepWhenSynchronize = 0;
+
+  while (true) {
+    let pointsFlashed: Set<string> = new Set();
+
+    if (grid.allPoints().every((point) => point.value === 0)) {
+      break;
+    }
+
+    stepWhenSynchronize += 1;
+
+    function flashPoint(point: Point<number>) {
+      if (pointsFlashed.has(`${point.x},${point.y}`)) {
+        return;
+      }
+
+      pointsFlashed.add(`${point.x},${point.y}`);
+
+      for (const adjacent of grid.adjacents(point.x, point.y, true)) {
+        // we have to go through a function call since adjacent might clash with
+        // other flashes. Think about setState in react
+        grid.setFn(adjacent.x, adjacent.y, (v) => {
+          if (v === 9) {
+            flashPoint(adjacent);
+            return 0;
+          }
+
+          return v + 1;
+        });
+      }
+    }
+
+    // step 1: the energy level of each octopus increases by 1
+    for (let x = 0; x < grid.width(); x++) {
+      for (let y = 0; y < grid.height(); y++) {
+        const energyLevel = grid.at(x, y)!;
+
+        grid.set(x, y, energyLevel + 1);
+      }
+    }
+
+    // step 2: flash
+    for (let x = 0; x < grid.width(); x++) {
+      for (let y = 0; y < grid.height(); y++) {
+        const energyLevel = grid.at(x, y)!;
+
+        if (energyLevel > 9) {
+          flashPoint({ x, y, value: energyLevel });
+        }
+      }
+    }
+
+    // step 3: reset flashed octopus
+    for (const point of pointsFlashed) {
+      const [x, y] = point.split(",").map(Number);
+
+      grid.set(x, y, 0);
+    }
+  }
+
+  return stepWhenSynchronize;
 }
 
 async function main() {
