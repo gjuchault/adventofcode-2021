@@ -1,4 +1,9 @@
-import { buildPassagePathing, CaveWithTail, isCaveSmall } from "./cave";
+import {
+  buildPassagePathing,
+  CaveWithTail,
+  hasAlreadyVisistedASmallCaveTwice,
+  isCaveSmall,
+} from "./cave";
 import { input as rawInput } from "./input";
 
 async function part1() {
@@ -10,7 +15,7 @@ async function part1() {
 
   let startingCave = passagePathing["start"];
 
-  let pathFromStartToEnd: string[][] = [];
+  let pathsFromStartToEnd: string[][] = [];
   let cavesToExplore: CaveWithTail[] = [];
   // difference with classic bfs: we don't need to keep a global track of all
   // explored caves, each path will be responsible for not exploring the same
@@ -22,7 +27,7 @@ async function part1() {
     let cave = cavesToExplore.shift()!;
 
     if (cave.name === "end") {
-      pathFromStartToEnd.push([...cave.tail, cave.name]);
+      pathsFromStartToEnd.push([...cave.tail, cave.name]);
       // difference with classic bfs: not stopping the loop here, just
       // continuing to get other paths
       continue;
@@ -39,13 +44,61 @@ async function part1() {
     }
   }
 
-  return pathFromStartToEnd.length;
+  return pathsFromStartToEnd.length;
 }
 
 async function part2() {
-  const input = rawInput.split("\n").map(Number);
+  const input = rawInput
+    .split("\n")
+    .map((line) => line.split("-") as [string, string]);
 
-  return input.length;
+  const passagePathing = buildPassagePathing(input);
+
+  let startingCave = passagePathing["start"];
+
+  let pathsFromStartToEnd: string[][] = [];
+  let cavesToExplore: CaveWithTail[] = [];
+  // difference with classic bfs: we don't need to keep a global track of all
+  // explored caves, each path will be responsible for not exploring the same
+  // small cave twice (by checking the tail)
+
+  cavesToExplore.push({ ...startingCave, tail: [] });
+
+  while (cavesToExplore.length > 0) {
+    let cave = cavesToExplore.shift()!;
+
+    if (cave.name === "end") {
+      pathsFromStartToEnd.push([...cave.tail, cave.name]);
+      // difference with classic bfs: not `break`-ing the loop here, just
+      // `continue`-ing to get other possibilities
+      continue;
+    }
+
+    for (let sibling of cave.siblings) {
+      const siblingCave = passagePathing[sibling];
+
+      // part 2: we allow one small cave to be visited twice
+      // since all our paths are independent, we can
+      const hasAlreadyVisistedTwice = hasAlreadyVisistedASmallCaveTwice([
+        ...cave.tail,
+        cave.name,
+      ]);
+
+      if (
+        hasAlreadyVisistedTwice ||
+        siblingCave.name === "start" ||
+        siblingCave.name === "end"
+      ) {
+        if (cave.tail.filter(isCaveSmall).includes(siblingCave.name)) {
+          continue;
+        }
+      }
+
+      cavesToExplore.push({ ...siblingCave, tail: [...cave.tail, cave.name] });
+    }
+  }
+
+  return pathsFromStartToEnd.length;
 }
 
 async function main() {

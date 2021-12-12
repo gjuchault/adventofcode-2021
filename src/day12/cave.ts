@@ -34,3 +34,18 @@ export function buildPassagePathing(allLinks: [string, string][]) {
 export function isCaveSmall(name: string) {
   return name[0].toLowerCase() === name[0];
 }
+
+export function hasAlreadyVisistedASmallCaveTwice(tail: string[]) {
+  const smallCavesVisited = tail.filter((cave) => isCaveSmall(cave));
+  const smallCavesVisitedByName: Record<string, number> = {};
+
+  for (const cave of smallCavesVisited) {
+    smallCavesVisitedByName[cave] = (smallCavesVisitedByName[cave] ?? 0) + 1;
+
+    if (smallCavesVisitedByName[cave] === 2) {
+      return true;
+    }
+  }
+
+  return false;
+}
