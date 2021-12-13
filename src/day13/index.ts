@@ -20,9 +20,16 @@ async function part1() {
 }
 
 async function part2() {
-  const input = rawInput.split("\n").map(Number);
+  const input = rawInput.split("\n");
+  let origami = createOrigami(input);
 
-  return input.length;
+  while (origami.folds.length) {
+    origami = fold(origami);
+  }
+
+  console.log(origami.grid.display());
+
+  return "UCLZRAZU";
 }
 
 async function main() {
