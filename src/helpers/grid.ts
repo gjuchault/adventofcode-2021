@@ -6,7 +6,7 @@ export type Grid<TValue> = {
   at(x: number, y: number): TValue | undefined;
   width(): number;
   height(): number;
-  toArray(): TValue[][];
+  toArray(): readonly (readonly TValue[])[];
   adjacents(x: number, y: number, includeDiagonals?: boolean): Point<TValue>[];
   allPoints(): Point<TValue>[];
   fromArray(input: TValue[][]): void;
@@ -44,7 +44,7 @@ export function createGrid<TValue>(): Grid<TValue> {
     },
 
     toArray() {
-      return [...grid.map((row) => [...row])];
+      return Object.freeze(grid.map((row) => Object.freeze(row)));
     },
 
     adjacents(x: number, y: number, includeDiagonals = false) {
