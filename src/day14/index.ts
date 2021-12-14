@@ -14,13 +14,23 @@ async function part1() {
     polymerization = applyPolymerization(polymerization);
   }
 
-  return computeScore(polymerization.template);
+  return computeScore(polymerization);
 }
 
 async function part2() {
   const input = rawInput.split("\n");
 
-  return input.length;
+  let polymerization = createPolymerization(input);
+
+  let d = Date.now();
+  for (let i = 0; i < 40; i++) {
+    const now = Date.now();
+    polymerization = applyPolymerization(polymerization);
+
+    d = now;
+  }
+
+  return computeScore(polymerization);
 }
 
 async function main() {

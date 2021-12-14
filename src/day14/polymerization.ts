@@ -1,5 +1,6 @@
 export type Polymerization = {
-  template: string;
+  pairCounters: Map<string, number>;
+  charactersCounters: Map<string, number>;
   pairInsertion: Map<string, string>;
 };
 
@@ -7,7 +8,8 @@ const pairInsertionRegex = /(\w+) -> (\w+)/;
 
 export function createPolymerization(input: string[]): Polymerization {
   let template = "";
-  let pairInsertion: Map<string, string> = new Map();
+  const pairInsertion: Map<string, string> = new Map();
+  const charactersCounters: Map<string, number> = new Map();
 
   for (const line of input) {
     if (line === "") {
@@ -24,42 +26,71 @@ export function createPolymerization(input: string[]): Polymerization {
     pairInsertion.set(match[1], match[2]);
   }
 
-  return { template, pairInsertion };
+  let pairCounters: Map<string, number> = new Map();
+
+  for (let i = 0; i < template.length - 1; i++) {
+    const pair = `${template[i]}${template[i + 1]}`;
+
+    pairCounters.set(pair, (pairCounters.get(pair) ?? 0) + 1);
+  }
+
+  for (let i = 0; i < template.length; i++) {
+    charactersCounters.set(
+      template[i],
+      (charactersCounters.get(template[i]) ?? 0) + 1
+    );
+  }
+
+  return { pairCounters, pairInsertion, charactersCounters };
 }
 
 export function applyPolymerization(
   polymerization: Polymerization
 ): Polymerization {
-  const template = polymerization.template;
-  let newTemplate = polymerization.template;
+  const pairCounters: Map<string, number> = new Map(
+    polymerization.pairCounters
+  );
 
-  for (let i = 0; i < template.length - 1; i++) {
-    const pair = `${template[i]}${template[i + 1]}`;
-    const charToInsert = polymerization.pairInsertion.get(pair);
+  const charactersCounters: Map<string, number> = new Map(
+    polymerization.charactersCounters
+  );
 
-    if (charToInsert === undefined) {
+  for (const [pair, counter] of polymerization.pairCounters) {
+    if (counter < 1) {
       continue;
     }
 
-    newTemplate = insertInString(newTemplate, charToInsert, i + i + 1);
+    const character = polymerization.pairInsertion.get(pair)!;
+    const firstNewPair = pair[0] + character;
+    const secondNewPair = character + pair[1];
+
+    pairCounters.set(pair, (pairCounters.get(pair) ?? 0) - counter);
+    pairCounters.set(
+      firstNewPair,
+      (pairCounters.get(firstNewPair) ?? 0) + counter
+    );
+    pairCounters.set(
+      secondNewPair,
+      (pairCounters.get(secondNewPair) ?? 0) + counter
+    );
+    charactersCounters.set(
+      character,
+      (charactersCounters.get(character) ?? 0) + counter
+    );
   }
 
-  return { template: newTemplate, pairInsertion: polymerization.pairInsertion };
+  return {
+    pairCounters,
+    charactersCounters,
+    pairInsertion: polymerization.pairInsertion,
+  };
 }
 
-export function computeScore(input: string): number {
-  const characters = input.split("").reduce<Record<string, number>>(
-    (acc, char) => ({
-      ...acc,
-      [char]: (acc[char] ?? 0) + 1,
-    }),
-    {}
-  );
+export function computeScore(polymerization: Polymerization): number {
+  let mostCommonCharacterCount = polymerization.charactersCounters.get("N")!;
+  let leastCommonCharacterCount = polymerization.charactersCounters.get("N")!;
 
-  let mostCommonCharacterCount = characters.N;
-  let leastCommonCharacterCount = characters.N;
-
-  for (const [_, count] of Object.entries(characters)) {
+  for (const [_, count] of polymerization.charactersCounters) {
     if (count > mostCommonCharacterCount) {
       mostCommonCharacterCount = count;
     }
@@ -70,8 +101,4 @@ export function computeScore(input: string): number {
   }
 
   return mostCommonCharacterCount - leastCommonCharacterCount;
-}
-
-function insertInString(source: string, char: string, index: number): string {
-  return source.substring(0, index) + char + source.substring(index);
 }
