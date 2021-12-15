@@ -4,6 +4,7 @@ export type Grid<TValue> = {
   set(x: number, y: number, value: TValue): void;
   setFn(x: number, y: number, fn: (value: TValue) => TValue): void;
   at(x: number, y: number): TValue | undefined;
+  pointAt(x: number, y: number): Point<TValue> | undefined;
   width(): number;
   height(): number;
   toArray(): readonly (readonly TValue[])[];
@@ -33,6 +34,16 @@ export function createGrid<TValue>(): Grid<TValue> {
       }
 
       return grid.at(y)?.at(x);
+    },
+
+    pointAt(x: number, y: number): Point<TValue> | undefined {
+      const value = this.at(x, y);
+
+      if (value === undefined) {
+        return undefined;
+      }
+
+      return { x, y, value };
     },
 
     width() {
@@ -120,4 +131,20 @@ export function uniquePoints<TValue>(points: Point<TValue>[]) {
   }
 
   return uniquePoints;
+}
+
+export function doesPathContainsPoint<TValue>(
+  path: Point<TValue>[],
+  point: Point<TValue>
+) {
+  let found = false;
+
+  for (const pathPoint of path) {
+    if (isSamePoint(pathPoint, point)) {
+      found = true;
+      break;
+    }
+  }
+
+  return found;
 }
