@@ -1,5 +1,5 @@
-import { createGrid, Point } from "../helpers/grid";
-import { createPriorityQueue } from "../helpers/priorityQueue";
+import { createGrid } from "../helpers/grid";
+import { computeRisk } from "./chiton";
 import { input as rawInput } from "./input";
 
 async function part1() {
@@ -8,58 +8,38 @@ async function part1() {
   const grid = createGrid<number>();
   grid.fromArray(input);
 
-  // the problem is to find the shortest path in a weighted directed acyclic graph.
-  // BFS is not good enough to do that
-  // Let's go with Dijkstra's algorithm
-
-  const startPoint = grid.pointAt(0, 0)!;
-  const endPoint = grid.pointAt(grid.width() - 1, grid.height() - 1)!;
-  const parentGrid = createGrid<Point<number>>();
-  const costGrid = createGrid<number>();
-
-  costGrid.set(0, 0, 0);
-
-  const priorityQueue = createPriorityQueue<Point<number>>(
-    (point) => costGrid.at(point.x, point.y) ?? Infinity
-  );
-
-  priorityQueue.push(startPoint);
-
-  let bestCandidate: Point<number> | undefined = undefined;
-
-  while (priorityQueue.length > 0) {
-    bestCandidate = priorityQueue.pop()!;
-
-    const costFromStartToBestCandidate = costGrid.at(
-      bestCandidate.x,
-      bestCandidate.y
-    )!;
-
-    for (const adjacent of grid.adjacents(bestCandidate.x, bestCandidate.y)) {
-      const costFromBestCandidateToAdjacent = adjacent.value;
-      const costFromStartToAdjacent =
-        costFromStartToBestCandidate + costFromBestCandidateToAdjacent;
-
-      const adjacentCost = costGrid.at(adjacent.x, adjacent.y);
-      const isFirstVisit = adjacentCost === undefined;
-
-      // either we never visited the cave, either we visited it but we found a
-      // better path
-      if (isFirstVisit || adjacentCost > costFromStartToAdjacent) {
-        costGrid.set(adjacent.x, adjacent.y, costFromStartToAdjacent);
-        priorityQueue.push(adjacent);
-        parentGrid.set(adjacent.x, adjacent.y, bestCandidate);
-      }
-    }
-  }
-
-  return costGrid.at(endPoint.x, endPoint.y)!;
+  return computeRisk(grid);
 }
 
 async function part2() {
-  const input = rawInput.split("\n").map(Number);
+  const input = rawInput.split("\n").map((row) => row.split("").map(Number));
 
-  return input.length;
+  const initialGrid = createGrid<number>();
+  initialGrid.fromArray(input);
+
+  const extendedGrid = createGrid<number>();
+
+  for (let x = 0; x < initialGrid.width() * 5; x++) {
+    for (let y = 0; y < initialGrid.height() * 5; y++) {
+      const increase =
+        Math.floor(x / initialGrid.width()) +
+        Math.floor(y / initialGrid.height());
+
+      const originalX = x % initialGrid.width();
+      const originalY = y % initialGrid.height();
+      const originalValue = initialGrid.at(originalX, originalY)!;
+
+      let newValue = originalValue + increase;
+
+      if (newValue > 9) {
+        newValue -= 9;
+      }
+
+      extendedGrid.set(x, y, newValue);
+    }
+  }
+
+  return computeRisk(extendedGrid);
 }
 
 async function main() {
