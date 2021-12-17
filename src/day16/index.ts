@@ -25,7 +25,10 @@ async function part1() {
 }
 
 async function part2() {
-  return rawInput.length;
+  const input = rawInput.split("").map(hexToBin).join("");
+  const packet = decodePacket(input);
+
+  return packet.value;
 }
 
 async function main() {

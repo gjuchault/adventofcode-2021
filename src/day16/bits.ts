@@ -1,19 +1,35 @@
-export type Packet = { message: string; content: string; version: number } & (
+export type Packet = {
+  message: string;
+  content: string;
+  version: number;
+  value: number;
+} & (
   | {
       type: "totalLength";
+      operation: Operation;
       totalLength: number;
       subPackets: Packet[];
     }
   | {
       type: "numberOfSubPackets";
+      operation: Operation;
+      value: number;
       numberOfSubPackets: number;
       subPackets: Packet[];
     }
   | {
       type: "literalValue";
-      literalValue: string;
     }
 );
+
+export type Operation =
+  | "sum"
+  | "product"
+  | "minimum"
+  | "maximum"
+  | "greaterThan"
+  | "lessThan"
+  | "equal";
 
 export function decodePacket(message: string): Packet {
   const version = parseInt(message.slice(0, 3), 2);
@@ -22,7 +38,7 @@ export function decodePacket(message: string): Packet {
   const parsedTypeId = parseTypeId(typeId);
 
   if (parsedTypeId === "literalValue") {
-    const { literalValue, endIndex } = parseLiteralValue(message.slice(6));
+    const { value, endIndex } = parseLiteralValue(message.slice(6));
     const content = message.slice(6, 6 + endIndex);
 
     return {
@@ -30,12 +46,13 @@ export function decodePacket(message: string): Packet {
       version,
       message: message.slice(0, 6 + endIndex),
       content,
-      literalValue,
+      value,
     };
   }
 
   const lengthTypeId = parseInt(message.slice(6, 7), 2);
   const parsedLengthTypeId = parseLengthTypeId(lengthTypeId);
+  const operation = parseOperationTypeId(typeId);
 
   if (parsedLengthTypeId === "totalLength") {
     const lengthStart = 7;
@@ -58,6 +75,8 @@ export function decodePacket(message: string): Packet {
       version,
       message: message.slice(0, totalLength + subPacketStart),
       content,
+      operation,
+      value: computeValue(operation, subPackets),
       totalLength,
       subPackets,
     };
@@ -94,6 +113,8 @@ export function decodePacket(message: string): Packet {
       version,
       message: message.slice(0, totalLength + subPacketStart),
       content,
+      operation,
+      value: computeValue(operation, subPackets),
       numberOfSubPackets,
       subPackets: subPackets,
     };
@@ -116,7 +137,7 @@ function parseLiteralValue(packet: string) {
     i += 5;
   } while (keepReading);
 
-  return { literalValue: parseInt(blocks.join(""), 2).toString(), endIndex: i };
+  return { value: parseInt(blocks.join(""), 2), endIndex: i };
 }
 
 function parseTypeId(input: number): "literalValue" | "operator" {
@@ -127,6 +148,27 @@ function parseTypeId(input: number): "literalValue" | "operator" {
   return "operator";
 }
 
+function parseOperationTypeId(input: number): Operation {
+  switch (input) {
+    case 0:
+      return "sum";
+    case 1:
+      return "product";
+    case 2:
+      return "minimum";
+    case 3:
+      return "maximum";
+    case 5:
+      return "greaterThan";
+    case 6:
+      return "lessThan";
+    case 7:
+      return "equal";
+    default:
+      throw new Error("Unknown operator type");
+  }
+}
+
 function parseLengthTypeId(
   input: number
 ): "totalLength" | "numberOfSubPackets" {
@@ -135,4 +177,43 @@ function parseLengthTypeId(
   }
 
   return "totalLength";
+}
+
+function computeValue(operation: Operation, subPackets: Packet[]) {
+  switch (operation) {
+    case "sum":
+      return subPackets.reduce(
+        (result, subPacket) => result + subPacket.value,
+        0
+      );
+    case "product":
+      return subPackets.reduce(
+        (result, subPacket) => result * subPacket.value,
+        1
+      );
+    case "minimum":
+      return Math.min(...subPackets.map((subPacket) => subPacket.value));
+    case "maximum":
+      return Math.max(...subPackets.map((subPacket) => subPacket.value));
+    case "greaterThan":
+      if (subPackets.length !== 2) {
+        throw new Error("Expected 2 subPackets for greaterThan");
+      }
+
+      return subPackets[0].value > subPackets[1].value ? 1 : 0;
+    case "lessThan":
+      if (subPackets.length !== 2) {
+        throw new Error("Expected 2 subPackets for lessThan");
+      }
+
+      return subPackets[0].value < subPackets[1].value ? 1 : 0;
+    case "equal":
+      if (subPackets.length !== 2) {
+        throw new Error("Expected 2 subPackets for equal");
+      }
+
+      return subPackets[0].value === subPackets[1].value ? 1 : 0;
+    default:
+      throw new Error("Unknown operator type");
+  }
 }
