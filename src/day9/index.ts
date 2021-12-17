@@ -91,8 +91,8 @@ async function part2() {
 function getLowPointsCoordinates(grid: Grid<number>) {
   const lowPoints: { x: number; y: number }[] = [];
 
-  for (let x = 0; x < grid.width(); x++) {
-    for (let y = 0; y < grid.height(); y++) {
+  for (let x = 0; x <= grid.maxX; x++) {
+    for (let y = 0; y <= grid.maxY; y++) {
       const cell = grid.at(x, y);
 
       if (cell === undefined) {

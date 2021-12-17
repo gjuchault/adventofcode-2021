@@ -1,13 +1,15 @@
 export type Point<TValue> = { x: number; y: number; value: TValue };
 
 export type Grid<TValue> = {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+
   set(x: number, y: number, value: TValue): void;
-  setFn(x: number, y: number, fn: (value: TValue) => TValue): void;
+  setFn(x: number, y: number, fn: (value: TValue | undefined) => TValue): void;
   at(x: number, y: number): TValue | undefined;
   pointAt(x: number, y: number): Point<TValue> | undefined;
-  width(): number;
-  height(): number;
-  toArray(): readonly (readonly TValue[])[];
   adjacents(x: number, y: number, includeDiagonals?: boolean): Point<TValue>[];
   allPoints(): Point<TValue>[];
   fromArray(input: TValue[][]): void;
@@ -15,25 +17,41 @@ export type Grid<TValue> = {
 };
 
 export function createGrid<TValue>(): Grid<TValue> {
-  let grid: TValue[][] = [];
+  let grid: Map<string, TValue> = new Map();
 
   return {
+    minX: 0,
+    maxX: 0,
+    minY: 0,
+    maxY: 0,
+
     set(x: number, y: number, value: TValue) {
-      grid[y] = grid[y] ?? [];
-      grid[y][x] = value;
+      if (x < this.minX) {
+        this.minX = x;
+      }
+
+      if (x > this.maxX) {
+        this.maxX = x;
+      }
+
+      if (y < this.minY) {
+        this.minY = y;
+      }
+
+      if (y > this.maxY) {
+        this.maxY = y;
+      }
+
+      grid.set(encodeCoordinates({ x, y }), value);
     },
 
-    setFn(x: number, y: number, fn: (value: TValue) => TValue) {
-      grid[y] = grid[y] ?? [];
-      grid[y][x] = fn(grid[y][x]);
+    setFn(x: number, y: number, fn: (value: TValue | undefined) => TValue) {
+      const id = encodeCoordinates({ x, y });
+      grid.set(id, fn(grid.get(id)));
     },
 
     at(x: number, y: number): TValue | undefined {
-      if (x < 0 || y < 0) {
-        return undefined;
-      }
-
-      return grid.at(y)?.at(x);
+      return grid.get(encodeCoordinates({ x, y }));
     },
 
     pointAt(x: number, y: number): Point<TValue> | undefined {
@@ -44,18 +62,6 @@ export function createGrid<TValue>(): Grid<TValue> {
       }
 
       return { x, y, value };
-    },
-
-    width() {
-      return grid.reduce((width, row) => Math.max(width, row.length), 0);
-    },
-
-    height() {
-      return grid.length;
-    },
-
-    toArray() {
-      return Object.freeze(grid.map((row) => Object.freeze(row)));
     },
 
     adjacents(x: number, y: number, includeDiagonals = false) {
@@ -82,9 +88,16 @@ export function createGrid<TValue>(): Grid<TValue> {
     },
 
     allPoints() {
-      return this.toArray().flatMap((row, y) => {
-        return row.map((value, x) => ({ x, y, value }));
-      });
+      const allPoints: Point<TValue>[] = [];
+
+      for (const [encodedCoordinates, value] of grid) {
+        allPoints.push({
+          ...decodeCoordinates(encodedCoordinates),
+          value,
+        });
+      }
+
+      return allPoints;
     },
 
     fromArray(input: TValue[][]) {
@@ -97,9 +110,9 @@ export function createGrid<TValue>(): Grid<TValue> {
 
     display(defaultValue: string = ".") {
       let rows = [];
-      for (let y = 0; y < this.height(); y++) {
+      for (let y = 0; y <= this.maxY; y++) {
         let row = "";
-        for (let x = 0; x < this.width(); x++) {
+        for (let x = 0; x <= this.maxX; x++) {
           row += this.at(x, y) ?? defaultValue;
         }
 
@@ -109,6 +122,20 @@ export function createGrid<TValue>(): Grid<TValue> {
       return rows.join("\n");
     },
   };
+}
+
+export function encodeCoordinates({ x, y }: { x: number; y: number }) {
+  return `${x},${y}`;
+}
+
+export function decodeCoordinates(id: string): { x: number; y: number } {
+  const [x, y] = id.split(",").map(Number);
+
+  if (Number.isNaN(x) || Number.isNaN(y)) {
+    throw new Error(`Invalid point id: ${id}`);
+  }
+
+  return { x, y };
 }
 
 export function isSamePoint<TValue>(left: Point<TValue>, right: Point<TValue>) {

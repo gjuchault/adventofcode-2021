@@ -7,7 +7,7 @@ export function computeRisk(grid: Grid<number>): number {
   // Let's go with Dijkstra's algorithm
 
   const startPoint = grid.pointAt(0, 0)!;
-  const endPoint = grid.pointAt(grid.width() - 1, grid.height() - 1)!;
+  const endPoint = grid.pointAt(grid.maxX, grid.maxY)!;
   const parentGrid = createGrid<Point<number>>();
   const costGrid = createGrid<number>();
 

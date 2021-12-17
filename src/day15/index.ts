@@ -19,14 +19,14 @@ async function part2() {
 
   const extendedGrid = createGrid<number>();
 
-  for (let x = 0; x < initialGrid.width() * 5; x++) {
-    for (let y = 0; y < initialGrid.height() * 5; y++) {
+  for (let x = 0; x < (initialGrid.maxX + 1) * 5; x++) {
+    for (let y = 0; y < (initialGrid.maxY + 1) * 5; y++) {
       const increase =
-        Math.floor(x / initialGrid.width()) +
-        Math.floor(y / initialGrid.height());
+        Math.floor(x / (initialGrid.maxX + 1)) +
+        Math.floor(y / (initialGrid.maxY + 1));
 
-      const originalX = x % initialGrid.width();
-      const originalY = y % initialGrid.height();
+      const originalX = x % (initialGrid.maxX + 1);
+      const originalY = y % (initialGrid.maxY + 1);
       const originalValue = initialGrid.at(originalX, originalY)!;
 
       let newValue = originalValue + increase;

@@ -31,14 +31,14 @@ async function part1() {
             return 0;
           }
 
-          return v + 1;
+          return (v ?? 0) + 1;
         });
       }
     }
 
     // step 1: the energy level of each octopus increases by 1
-    for (let x = 0; x < grid.width(); x++) {
-      for (let y = 0; y < grid.height(); y++) {
+    for (let x = 0; x <= grid.maxX; x++) {
+      for (let y = 0; y <= grid.maxY; y++) {
         const energyLevel = grid.at(x, y)!;
 
         grid.set(x, y, energyLevel + 1);
@@ -46,8 +46,8 @@ async function part1() {
     }
 
     // step 2: flash
-    for (let x = 0; x < grid.width(); x++) {
-      for (let y = 0; y < grid.height(); y++) {
+    for (let x = 0; x <= grid.maxX; x++) {
+      for (let y = 0; y <= grid.maxY; y++) {
         const energyLevel = grid.at(x, y)!;
 
         if (energyLevel > 9) {
@@ -100,14 +100,14 @@ async function part2() {
             return 0;
           }
 
-          return v + 1;
+          return (v ?? 0) + 1;
         });
       }
     }
 
     // step 1: the energy level of each octopus increases by 1
-    for (let x = 0; x < grid.width(); x++) {
-      for (let y = 0; y < grid.height(); y++) {
+    for (let x = 0; x <= grid.maxX; x++) {
+      for (let y = 0; y <= grid.maxY; y++) {
         const energyLevel = grid.at(x, y)!;
 
         grid.set(x, y, energyLevel + 1);
@@ -115,8 +115,8 @@ async function part2() {
     }
 
     // step 2: flash
-    for (let x = 0; x < grid.width(); x++) {
-      for (let y = 0; y < grid.height(); y++) {
+    for (let x = 0; x <= grid.maxX; x++) {
+      for (let y = 0; y <= grid.maxY; y++) {
         const energyLevel = grid.at(x, y)!;
 
         if (energyLevel > 9) {

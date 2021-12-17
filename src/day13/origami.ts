@@ -34,8 +34,8 @@ export function createOrigami(input: string[]) {
   }
 
   // we need to fill by point so if we have empty lines we still have them
-  for (let x = 0; x < grid.width(); x++) {
-    for (let y = 0; y < grid.height(); y++) {
+  for (let x = 0; x <= grid.maxX; x++) {
+    for (let y = 0; y <= grid.maxY; y++) {
       if (grid.at(x, y) === undefined) {
         grid.set(x, y, ".");
       }
@@ -52,8 +52,8 @@ export function fold(origami: Origami): Origami {
   const grid = createGrid<"#" | ".">();
   const [nextFold, ...folds] = origami.folds;
 
-  const initialHeight = origami.grid.height();
-  const initialWidth = origami.grid.width();
+  const initialHeight = origami.grid.maxY + 1;
+  const initialWidth = origami.grid.maxX + 1;
 
   const maxX = nextFold.direction === "x" ? nextFold.value : initialWidth;
   const maxY = nextFold.direction === "y" ? nextFold.value : initialHeight;
