@@ -1,5 +1,12 @@
 export type Point<TValue> = { x: number; y: number; value: TValue };
 
+export type Square<TValue> = {
+  topLeft: Point<TValue>;
+  topRight: Point<TValue>;
+  bottomRight: Point<TValue>;
+  bottomLeft: Point<TValue>;
+};
+
 export type Grid<TValue> = {
   minX: number;
   minY: number;
@@ -13,7 +20,11 @@ export type Grid<TValue> = {
   adjacents(x: number, y: number, includeDiagonals?: boolean): Point<TValue>[];
   allPoints(): Point<TValue>[];
   fromArray(input: TValue[][]): void;
-  display(defaultValue?: string): string;
+  display(
+    renderValue?: (value: TValue | undefined) => string,
+    directionX?: "toRight" | "toLeft",
+    directionY?: "toBottom" | "toTop"
+  ): string;
 };
 
 export function createGrid<TValue>(): Grid<TValue> {
@@ -108,12 +119,35 @@ export function createGrid<TValue>(): Grid<TValue> {
       }
     },
 
-    display(defaultValue: string = ".") {
+    display(
+      renderValue: (value: TValue | undefined) => string = (value) =>
+        (value as unknown as any).toString(),
+      directionX: "toRight" | "toLeft" = "toLeft",
+      directionY: "toTop" | "toBottom" = "toBottom"
+    ) {
       let rows = [];
-      for (let y = 0; y <= this.maxY; y++) {
+      const startY = directionY === "toBottom" ? this.minY : this.maxY;
+      const endY = directionY === "toBottom" ? this.maxY : this.minY;
+      const yIncrement = directionY === "toBottom" ? 1 : -1;
+      const yComp =
+        directionY === "toBottom"
+          ? (a: number, b: number) => a <= b
+          : (a: number, b: number) => a >= b;
+
+      const startX = directionX === "toLeft" ? this.minX : this.maxX;
+      const endX = directionX === "toLeft" ? this.maxX : this.minX;
+      const xIncrement = directionX === "toLeft" ? 1 : -1;
+      const xComp =
+        directionX === "toLeft"
+          ? (a: number, b: number) => a <= b
+          : (a: number, b: number) => a >= b;
+
+      for (let y = startY; yComp(y, endY); y += yIncrement) {
         let row = "";
-        for (let x = 0; x <= this.maxX; x++) {
-          row += this.at(x, y) ?? defaultValue;
+        for (let x = startX; xComp(x, endX); x += xIncrement) {
+          const value = this.at(x, y);
+
+          row += renderValue(value);
         }
 
         rows.push(row);
@@ -174,4 +208,29 @@ export function doesPathContainsPoint<TValue>(
   }
 
   return found;
+}
+
+export function doesSquareContainPoint<TValue>(
+  square: Square<TValue>,
+  point: Point<TValue>
+): boolean {
+  if (
+    square.topLeft.x !== square.bottomLeft.x ||
+    square.topRight.x !== square.bottomRight.x ||
+    square.topLeft.y !== square.topRight.y ||
+    square.bottomLeft.y !== square.bottomRight.y
+  ) {
+    throw new Error("Invalid square");
+  }
+
+  if (
+    point.x < square.topLeft.x ||
+    point.x > square.topRight.x ||
+    point.y > square.topLeft.y ||
+    point.y < square.bottomLeft.y
+  ) {
+    return false;
+  }
+
+  return true;
 }
