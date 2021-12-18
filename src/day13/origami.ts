@@ -18,7 +18,7 @@ export function createOrigami(input: string[]) {
       continue;
     }
 
-    const match = foldRegex.exec(line);
+    const match = line.match(foldRegex);
 
     if (match === null) {
       const [x, y] = line.split(",").map(Number);

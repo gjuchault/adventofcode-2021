@@ -16,7 +16,7 @@ export function createPolymerization(input: string[]): Polymerization {
       continue;
     }
 
-    const match = pairInsertionRegex.exec(line);
+    const match = line.match(pairInsertionRegex);
 
     if (match === null) {
       template = line;
